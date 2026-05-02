@@ -1,9 +1,9 @@
-// ConfigHelper.ts
 import fs from "node:fs"
 import path from "node:path"
 import { app } from "electron"
 import { EventEmitter } from "events"
 import { OpenAI } from "openai"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
 interface Config {
   apiKey: string;
@@ -11,6 +11,8 @@ interface Config {
   extractionModel: string;
   solutionModel: string;
   debuggingModel: string;
+  mcqModel: string;          // Added MCQ-specific model
+  explanationModel: string;  // Added explanation-specific model
   language: string;
   opacity: number;
 }
@@ -20,9 +22,11 @@ export class ConfigHelper extends EventEmitter {
   private defaultConfig: Config = {
     apiKey: "",
     apiProvider: "gemini", // Default to Gemini
-    extractionModel: "gemini-2.0-flash", // Default to Flash for faster responses
-    solutionModel: "gemini-2.0-flash",
-    debuggingModel: "gemini-2.0-flash",
+    extractionModel: "gemini-3.1-pro", 
+    solutionModel: "gemini-3.1-pro",
+    debuggingModel: "gemini-3.1-pro",
+    mcqModel: "gemini-3.1-pro",
+    explanationModel: "gemini-3.1-pro",
     language: "python",
     opacity: 1.0
   };
@@ -60,24 +64,31 @@ export class ConfigHelper extends EventEmitter {
    */
   private sanitizeModelSelection(model: string, provider: "openai" | "gemini" | "anthropic"): string {
     if (provider === "openai") {
-      // Only allow gpt-4o and gpt-4o-mini for OpenAI
-      const allowedModels = ['gpt-4o', 'gpt-4o-mini'];
+      // Allow latest gpt-4o models and requested GPT-5.x versions
+      const allowedModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-5.2', 'gpt-5.4'];
       if (!allowedModels.includes(model)) {
-        console.warn(`Invalid OpenAI model specified: ${model}. Using default model: gpt-4o`);
-        return 'gpt-4o';
+        console.warn(`Invalid OpenAI model specified: ${model}. Using default model: gpt-5.4`);
+        return 'gpt-5.4';
       }
       return model;
     } else if (provider === "gemini")  {
-      // Only allow gemini-1.5-pro and gemini-2.0-flash for Gemini
-      const allowedModels = ['gemini-1.5-pro', 'gemini-2.0-flash'];
+      // Allow latest gemini-2.0 models and requested Gemini 3.x versions
+      const allowedModels = ['gemini-1.5-pro', 'gemini-2.0-flash', 'gemini-2.0-flash-lite-preview-02-05', 'gemini-3.1-pro'];
       if (!allowedModels.includes(model)) {
-        console.warn(`Invalid Gemini model specified: ${model}. Using default model: gemini-2.0-flash`);
-        return 'gemini-2.0-flash'; // Changed default to flash
+        console.warn(`Invalid Gemini model specified: ${model}. Using default model: gemini-3.1-pro`);
+        return 'gemini-3.1-pro';
       }
       return model;
     }  else if (provider === "anthropic") {
-      // Only allow Claude models
-      const allowedModels = ['claude-3-7-sonnet-20250219', 'claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'];
+      // Allow latest Claude 3.7 models and requested Claude 4.x versions
+      const allowedModels = [
+        'claude-3-7-sonnet-20250219', 
+        'claude-3-5-sonnet-20241022', 
+        'claude-3-5-haiku-20241022', 
+        'claude-3-opus-20240229',
+        'claude-opus-4.6',
+        'claude-opus-4.7'
+      ];
       if (!allowedModels.includes(model)) {
         console.warn(`Invalid Anthropic model specified: ${model}. Using default model: claude-3-7-sonnet-20250219`);
         return 'claude-3-7-sonnet-20250219';
@@ -99,16 +110,17 @@ export class ConfigHelper extends EventEmitter {
           config.apiProvider = "gemini"; // Default to Gemini if invalid
         }
         
-        // Sanitize model selections to ensure only allowed models are used
-        if (config.extractionModel) {
-          config.extractionModel = this.sanitizeModelSelection(config.extractionModel, config.apiProvider);
-        }
-        if (config.solutionModel) {
-          config.solutionModel = this.sanitizeModelSelection(config.solutionModel, config.apiProvider);
-        }
-        if (config.debuggingModel) {
-          config.debuggingModel = this.sanitizeModelSelection(config.debuggingModel, config.apiProvider);
-        }
+        // Set provider-specific defaults if models are missing
+        const provider = config.apiProvider;
+        const defaultModel = provider === "openai" ? "gpt-5.4" : 
+                            provider === "anthropic" ? "claude-opus-4.7" : 
+                            "gemini-3.1-pro";
+
+        config.extractionModel = this.sanitizeModelSelection(config.extractionModel || defaultModel, provider);
+        config.solutionModel = this.sanitizeModelSelection(config.solutionModel || defaultModel, provider);
+        config.debuggingModel = this.sanitizeModelSelection(config.debuggingModel || defaultModel, provider);
+        config.mcqModel = this.sanitizeModelSelection(config.mcqModel || defaultModel, provider);
+        config.explanationModel = this.sanitizeModelSelection(config.explanationModel || defaultModel, provider);
         
         return {
           ...this.defaultConfig,
@@ -168,20 +180,26 @@ export class ConfigHelper extends EventEmitter {
         updates.apiProvider = provider;
       }
       
-      // If provider is changing, reset models to the default for that provider
+      // If provider is changing, reset models to the default for that provider based on user ranking
       if (updates.apiProvider && updates.apiProvider !== currentConfig.apiProvider) {
         if (updates.apiProvider === "openai") {
-          updates.extractionModel = "gpt-4o";
-          updates.solutionModel = "gpt-4o";
-          updates.debuggingModel = "gpt-4o";
+          updates.extractionModel = "gpt-5.4";
+          updates.solutionModel = "gpt-5.4";
+          updates.debuggingModel = "gpt-5.4";
+          updates.mcqModel = "gpt-5.4";
+          updates.explanationModel = "gpt-5.4";
         } else if (updates.apiProvider === "anthropic") {
-          updates.extractionModel = "claude-3-7-sonnet-20250219";
-          updates.solutionModel = "claude-3-7-sonnet-20250219";
-          updates.debuggingModel = "claude-3-7-sonnet-20250219";
+          updates.extractionModel = "claude-opus-4.7";
+          updates.solutionModel = "claude-opus-4.7";
+          updates.debuggingModel = "claude-opus-4.7";
+          updates.mcqModel = "claude-opus-4.6";
+          updates.explanationModel = "claude-opus-4.6";
         } else {
-          updates.extractionModel = "gemini-2.0-flash";
-          updates.solutionModel = "gemini-2.0-flash";
-          updates.debuggingModel = "gemini-2.0-flash";
+          updates.extractionModel = "gemini-3.1-pro";
+          updates.solutionModel = "gemini-3.1-pro";
+          updates.debuggingModel = "gemini-3.1-pro";
+          updates.mcqModel = "gemini-3.1-pro";
+          updates.explanationModel = "gemini-3.1-pro";
         }
       }
       
@@ -347,23 +365,30 @@ export class ConfigHelper extends EventEmitter {
   
   /**
    * Test Gemini API key
-   * Note: This is a simplified implementation since we don't have the actual Gemini client
    */
   private async testGeminiKey(apiKey: string): Promise<{valid: boolean, error?: string}> {
     try {
-      // For now, we'll just do a basic check to ensure the key exists and has valid format
-      // In production, you would connect to the Gemini API and validate the key
-      if (apiKey && apiKey.trim().length >= 20) {
-        // Here you would actually validate the key with a Gemini API call
-        return { valid: true };
+      if (!apiKey || apiKey.trim().length < 10) {
+        return { valid: false, error: 'Invalid Gemini API key format.' };
       }
-      return { valid: false, error: 'Invalid Gemini API key format.' };
+
+      // Using standard SDK for simple verification
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      await model.generateContent("ping");
+      
+      return { valid: true };
     } catch (error: any) {
       console.error('Gemini API key test failed:', error);
       let errorMessage = 'Unknown error validating Gemini API key';
       
       if (error.message) {
-        errorMessage = `Error: ${error.message}`;
+        if (error.message.includes('API_KEY_INVALID') || error.message.includes('invalid api key')) {
+          errorMessage = 'Invalid API key. Please check your Gemini key and try again.';
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
       }
       
       return { valid: false, error: errorMessage };
@@ -372,26 +397,19 @@ export class ConfigHelper extends EventEmitter {
 
   /**
    * Test Anthropic API key
-   * Note: This is a simplified implementation since we don't have the actual Anthropic client
    */
   private async testAnthropicKey(apiKey: string): Promise<{valid: boolean, error?: string}> {
     try {
-      // For now, we'll just do a basic check to ensure the key exists and has valid format
-      // In production, you would connect to the Anthropic API and validate the key
-      if (apiKey && /^sk-ant-[a-zA-Z0-9]{32,}$/.test(apiKey.trim())) {
-        // Here you would actually validate the key with an Anthropic API call
-        return { valid: true };
+      if (!apiKey || !apiKey.trim().startsWith('sk-ant-')) {
+        return { valid: false, error: 'Invalid Anthropic API key format. Should start with sk-ant-' };
       }
-      return { valid: false, error: 'Invalid Anthropic API key format.' };
+      
+      // In a real scenario, we'd make a small request here as well.
+      // For now, basic format validation is kept to avoid extra SDK overhead in ConfigHelper.
+      return { valid: true };
     } catch (error: any) {
       console.error('Anthropic API key test failed:', error);
-      let errorMessage = 'Unknown error validating Anthropic API key';
-      
-      if (error.message) {
-        errorMessage = `Error: ${error.message}`;
-      }
-      
-      return { valid: false, error: errorMessage };
+      return { valid: false, error: error.message || 'Unknown error validating Anthropic API key' };
     }
   }
 }

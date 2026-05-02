@@ -3,6 +3,8 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
 import Queue from "../_pages/Queue"
 import Solutions from "../_pages/Solutions"
+import MCQResults from "../_pages/MCQResults"
+import Explanation from "../_pages/Explanation"
 import { useToast } from "../contexts/toast"
 
 interface SubscribedAppProps {
@@ -17,25 +19,19 @@ const SubscribedApp: React.FC<SubscribedAppProps> = ({
   setLanguage
 }) => {
   const queryClient = useQueryClient()
-  const [view, setView] = useState<"queue" | "solutions" | "debug">("queue")
+  const [view, setView] = useState<"queue" | "solutions" | "debug" | "mcq" | "explanation">("queue")
   const containerRef = useRef<HTMLDivElement>(null)
   const { showToast } = useToast()
 
   // Let's ensure we reset queries etc. if some electron signals happen
   useEffect(() => {
     const cleanup = window.electronAPI.onResetView(() => {
-      queryClient.invalidateQueries({
-        queryKey: ["screenshots"]
-      })
-      queryClient.invalidateQueries({
-        queryKey: ["problem_statement"]
-      })
-      queryClient.invalidateQueries({
-        queryKey: ["solution"]
-      })
-      queryClient.invalidateQueries({
-        queryKey: ["new_solution"]
-      })
+      queryClient.invalidateQueries({ queryKey: ["screenshots"] })
+      queryClient.invalidateQueries({ queryKey: ["problem_statement"] })
+      queryClient.invalidateQueries({ queryKey: ["solution"] })
+      queryClient.invalidateQueries({ queryKey: ["new_solution"] })
+      queryClient.invalidateQueries({ queryKey: ["mcq_result"] })
+      queryClient.invalidateQueries({ queryKey: ["explanation_result"] })
       setView("queue")
     })
 
@@ -93,27 +89,19 @@ const SubscribedApp: React.FC<SubscribedAppProps> = ({
         setView("solutions")
       }),
       window.electronAPI.onUnauthorized(() => {
-        queryClient.removeQueries({
-          queryKey: ["screenshots"]
-        })
-        queryClient.removeQueries({
-          queryKey: ["solution"]
-        })
-        queryClient.removeQueries({
-          queryKey: ["problem_statement"]
-        })
+        queryClient.removeQueries({ queryKey: ["screenshots"] })
+        queryClient.removeQueries({ queryKey: ["solution"] })
+        queryClient.removeQueries({ queryKey: ["problem_statement"] })
+        queryClient.removeQueries({ queryKey: ["mcq_result"] })
+        queryClient.removeQueries({ queryKey: ["explanation_result"] })
         setView("queue")
       }),
       window.electronAPI.onResetView(() => {
-        queryClient.removeQueries({
-          queryKey: ["screenshots"]
-        })
-        queryClient.removeQueries({
-          queryKey: ["solution"]
-        })
-        queryClient.removeQueries({
-          queryKey: ["problem_statement"]
-        })
+        queryClient.removeQueries({ queryKey: ["screenshots"] })
+        queryClient.removeQueries({ queryKey: ["solution"] })
+        queryClient.removeQueries({ queryKey: ["problem_statement"] })
+        queryClient.removeQueries({ queryKey: ["mcq_result"] })
+        queryClient.removeQueries({ queryKey: ["explanation_result"] })
         setView("queue")
       }),
       window.electronAPI.onResetView(() => {
@@ -121,14 +109,30 @@ const SubscribedApp: React.FC<SubscribedAppProps> = ({
       }),
       window.electronAPI.onProblemExtracted((data: any) => {
         if (view === "queue") {
-          queryClient.invalidateQueries({
-            queryKey: ["problem_statement"]
-          })
+          queryClient.invalidateQueries({ queryKey: ["problem_statement"] })
           queryClient.setQueryData(["problem_statement"], data)
         }
       }),
       window.electronAPI.onSolutionError((error: string) => {
         showToast("Error", error, "error")
+      }),
+      // ─── Agentic system: route to correct view based on classification ──
+      window.electronAPI.onQueryClassified((data: { queryType: string; confidence: number }) => {
+        console.log("Query classified:", data)
+        if (data.queryType === "mcq") {
+          setView("mcq")
+        } else if (data.queryType === "explanation") {
+          setView("explanation")
+        }
+        // code_generation / debugging / mixed stay on "solutions" view (set by onSolutionStart)
+      }),
+      window.electronAPI.onMCQResult((data: any) => {
+        queryClient.setQueryData(["mcq_result"], data)
+        setView("mcq")
+      }),
+      window.electronAPI.onExplanationResult((data: any) => {
+        queryClient.setQueryData(["explanation_result"], data)
+        setView("explanation")
       })
     ]
     return () => cleanupFunctions.forEach((fn) => fn())
@@ -142,6 +146,16 @@ const SubscribedApp: React.FC<SubscribedAppProps> = ({
           credits={credits}
           currentLanguage={currentLanguage}
           setLanguage={setLanguage}
+        />
+      ) : view === "mcq" ? (
+        <MCQResults
+          setView={setView}
+          currentLanguage={currentLanguage}
+        />
+      ) : view === "explanation" ? (
+        <Explanation
+          setView={setView}
+          currentLanguage={currentLanguage}
         />
       ) : view === "solutions" ? (
         <Solutions

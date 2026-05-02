@@ -1,5 +1,5 @@
 {
-  "name": "interview-coder-v1",
+  "name": "placed-ai",
   "version": "1.0.19",
   "main": "./dist-electron/main.js",
   "scripts": {
@@ -11,12 +11,14 @@
     "build": "cross-env NODE_ENV=production npm run clean && vite build && tsc -p tsconfig.electron.json",
     "run-prod": "cross-env NODE_ENV=production electron ./dist-electron/main.js",
     "package": "npm run build && electron-builder build",
-    "package-mac": "npm run build && electron-builder build --mac",
-    "package-win": "npm run build && electron-builder build --win"
+    "package-mac": "npm run build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder build --mac",
+    "package-win": "npm run build && electron-builder build --win",
+    "package-linux": "npm run build && electron-builder build --linux",
+    "package-all": "npm run build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder build --mac --win --linux"
   },
   "build": {
-    "appId": "com.chunginlee.interviewcoder",
-    "productName": "Interview Coder",
+    "appId": "com.placedai.app",
+    "productName": "Placed AI",
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
@@ -48,18 +50,14 @@
           ]
         }
       ],
-      "artifactName": "Interview-Coder-${arch}.${ext}",
+      "artifactName": "${productName}-${arch}.${ext}",
       "icon": "assets/icons/mac/icon.icns",
-      "hardenedRuntime": true,
+      "hardenedRuntime": false,
       "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
-      "identity": "Developer ID Application",
-      "notarize": true,
       "protocols": {
-        "name": "interview-coder-protocol",
+        "name": "placed-ai-protocol",
         "schemes": [
-          "interview-coder"
+          "placed-ai"
         ]
       }
     },
@@ -70,9 +68,9 @@
       "icon": "assets/icons/win/icon.ico",
       "artifactName": "${productName}-Windows-${version}.${ext}",
       "protocols": {
-        "name": "interview-coder-protocol",
+        "name": "placed-ai-protocol",
         "schemes": [
-          "interview-coder"
+          "placed-ai"
         ]
       }
     },
@@ -83,9 +81,9 @@
       "icon": "assets/icons/png/icon-256x256.png",
       "artifactName": "${productName}-Linux-${version}.${ext}",
       "protocols": {
-        "name": "interview-coder-protocol",
+        "name": "placed-ai-protocol",
         "schemes": [
-          "interview-coder"
+          "placed-ai"
         ]
       }
     },
@@ -93,18 +91,9 @@
       {
         "provider": "github",
         "owner": "ibttf",
-        "repo": "interview-coder",
+        "repo": "placed-ai",
         "private": false,
         "releaseType": "release"
-      }
-    ],
-    "extraResources": [
-      {
-        "from": ".env",
-        "to": ".env",
-        "filter": [
-          "**/*"
-        ]
       }
     ],
     "extraMetadata": {
@@ -118,7 +107,7 @@
     "technical interview",
     "tool"
   ],
-  "author": "Interview Coder Contributors",
+  "author": "Placed AI Contributors",
   "license": "AGPL-3.0-or-later",
   "description": "An invisible desktop application to help you pass your technical interviews.",
   "dependencies": {

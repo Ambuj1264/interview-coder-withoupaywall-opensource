@@ -158,16 +158,16 @@ function initializeHelpers() {
 
 // Register the interview-coder protocol
 if (process.platform === "darwin") {
-  app.setAsDefaultProtocolClient("interview-coder")
+  app.setAsDefaultProtocolClient("placed-ai")
 } else {
-  app.setAsDefaultProtocolClient("interview-coder", process.execPath, [
+  app.setAsDefaultProtocolClient("placed-ai", process.execPath, [
     path.resolve(process.argv[1] || "")
   ])
 }
 
 // Handle the protocol. In this case, we choose to show an Error Box.
 if (process.defaultApp && process.argv.length >= 2) {
-  app.setAsDefaultProtocolClient("interview-coder", process.execPath, [
+  app.setAsDefaultProtocolClient("placed-ai", process.execPath, [
     path.resolve(process.argv[1])
   ])
 }
@@ -506,7 +506,7 @@ function loadEnvVariables() {
 async function initializeApp() {
   try {
     // Set custom cache directory to prevent permission issues
-    const appDataPath = path.join(app.getPath('appData'), 'interview-coder-v1')
+    const appDataPath = path.join(app.getPath('appData'), 'placed-ai')
     const sessionPath = path.join(appDataPath, 'session')
     const tempPath = path.join(appDataPath, 'temp')
     const cachePath = path.join(appDataPath, 'cache')

@@ -61,6 +61,15 @@ export interface ElectronAPI {
   openLink: (url: string) => void
   onApiKeyInvalid: (callback: () => void) => () => void
   removeListener: (eventName: string, callback: (...args: any[]) => void) => void
+
+  // Agentic system events
+  onMCQResult: (callback: (data: any) => void) => () => void
+  onExplanationResult: (callback: (data: any) => void) => () => void
+  onQueryClassified: (callback: (data: { queryType: string; confidence: number }) => void) => () => void
+  onAgentProgress: (callback: (data: { message: string; progress: number; agentId?: string }) => void) => () => void
+  onShowSettings: (callback: () => void) => () => void
+  onDeleteLastScreenshot: (callback: () => void) => () => void
+  deleteLastScreenshot: () => Promise<{ success: boolean; error?: string }>
 }
 
 declare global {
