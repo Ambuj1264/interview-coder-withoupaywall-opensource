@@ -22,11 +22,11 @@ export class ConfigHelper extends EventEmitter {
   private defaultConfig: Config = {
     apiKey: "",
     apiProvider: "gemini", // Default to Gemini
-    extractionModel: "gemini-3.1-pro", 
-    solutionModel: "gemini-3.1-pro",
-    debuggingModel: "gemini-3.1-pro",
-    mcqModel: "gemini-3.1-pro",
-    explanationModel: "gemini-3.1-pro",
+    extractionModel: "gemini-2.0-flash",
+    solutionModel: "gemini-2.0-flash",
+    debuggingModel: "gemini-2.0-flash",
+    mcqModel: "gemini-2.0-flash",
+    explanationModel: "gemini-2.0-flash",
     language: "python",
     opacity: 1.0
   };
@@ -64,31 +64,21 @@ export class ConfigHelper extends EventEmitter {
    */
   private sanitizeModelSelection(model: string, provider: "openai" | "gemini" | "anthropic"): string {
     if (provider === "openai") {
-      // Allow latest gpt-4o models and requested GPT-5.x versions
-      const allowedModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-5.2', 'gpt-5.4'];
+      const allowedModels = ['gpt-5.4-mini'];
       if (!allowedModels.includes(model)) {
-        console.warn(`Invalid OpenAI model specified: ${model}. Using default model: gpt-5.4`);
-        return 'gpt-5.4';
+        console.warn(`Invalid OpenAI model specified: ${model}. Using default model: gpt-5.4-mini`);
+        return 'gpt-5.4-mini';
       }
       return model;
-    } else if (provider === "gemini")  {
-      // Allow latest gemini-2.0 models and requested Gemini 3.x versions
-      const allowedModels = ['gemini-1.5-pro', 'gemini-2.0-flash', 'gemini-2.0-flash-lite-preview-02-05', 'gemini-3.1-pro'];
+    } else if (provider === "gemini") {
+      const allowedModels = ['gemini-2.0-flash', 'gemini-1.5-pro'];
       if (!allowedModels.includes(model)) {
-        console.warn(`Invalid Gemini model specified: ${model}. Using default model: gemini-3.1-pro`);
-        return 'gemini-3.1-pro';
+        console.warn(`Invalid Gemini model specified: ${model}. Using default model: gemini-2.0-flash`);
+        return 'gemini-2.0-flash';
       }
       return model;
-    }  else if (provider === "anthropic") {
-      // Allow latest Claude 3.7 models and requested Claude 4.x versions
-      const allowedModels = [
-        'claude-3-7-sonnet-20250219', 
-        'claude-3-5-sonnet-20241022', 
-        'claude-3-5-haiku-20241022', 
-        'claude-3-opus-20240229',
-        'claude-opus-4.6',
-        'claude-opus-4.7'
-      ];
+    } else if (provider === "anthropic") {
+      const allowedModels = ['claude-3-7-sonnet-20250219'];
       if (!allowedModels.includes(model)) {
         console.warn(`Invalid Anthropic model specified: ${model}. Using default model: claude-3-7-sonnet-20250219`);
         return 'claude-3-7-sonnet-20250219';
@@ -112,9 +102,9 @@ export class ConfigHelper extends EventEmitter {
         
         // Set provider-specific defaults if models are missing
         const provider = config.apiProvider;
-        const defaultModel = provider === "openai" ? "gpt-5.4" : 
-                            provider === "anthropic" ? "claude-opus-4.7" : 
-                            "gemini-3.1-pro";
+        const defaultModel = provider === "openai" ? "gpt-5.4-mini" :
+                            provider === "anthropic" ? "claude-3-7-sonnet-20250219" :
+                            "gemini-2.0-flash";
 
         config.extractionModel = this.sanitizeModelSelection(config.extractionModel || defaultModel, provider);
         config.solutionModel = this.sanitizeModelSelection(config.solutionModel || defaultModel, provider);
@@ -183,23 +173,23 @@ export class ConfigHelper extends EventEmitter {
       // If provider is changing, reset models to the default for that provider based on user ranking
       if (updates.apiProvider && updates.apiProvider !== currentConfig.apiProvider) {
         if (updates.apiProvider === "openai") {
-          updates.extractionModel = "gpt-5.4";
-          updates.solutionModel = "gpt-5.4";
-          updates.debuggingModel = "gpt-5.4";
-          updates.mcqModel = "gpt-5.4";
-          updates.explanationModel = "gpt-5.4";
+          updates.extractionModel = "gpt-5.4-mini";
+          updates.solutionModel = "gpt-5.4-mini";
+          updates.debuggingModel = "gpt-5.4-mini";
+          updates.mcqModel = "gpt-5.4-mini";
+          updates.explanationModel = "gpt-5.4-mini";
         } else if (updates.apiProvider === "anthropic") {
-          updates.extractionModel = "claude-opus-4.7";
-          updates.solutionModel = "claude-opus-4.7";
-          updates.debuggingModel = "claude-opus-4.7";
-          updates.mcqModel = "claude-opus-4.6";
-          updates.explanationModel = "claude-opus-4.6";
+          updates.extractionModel = "claude-3-7-sonnet-20250219";
+          updates.solutionModel = "claude-3-7-sonnet-20250219";
+          updates.debuggingModel = "claude-3-7-sonnet-20250219";
+          updates.mcqModel = "claude-3-7-sonnet-20250219";
+          updates.explanationModel = "claude-3-7-sonnet-20250219";
         } else {
-          updates.extractionModel = "gemini-3.1-pro";
-          updates.solutionModel = "gemini-3.1-pro";
-          updates.debuggingModel = "gemini-3.1-pro";
-          updates.mcqModel = "gemini-3.1-pro";
-          updates.explanationModel = "gemini-3.1-pro";
+          updates.extractionModel = "gemini-2.0-flash";
+          updates.solutionModel = "gemini-2.0-flash";
+          updates.debuggingModel = "gemini-2.0-flash";
+          updates.mcqModel = "gemini-2.0-flash";
+          updates.explanationModel = "gemini-2.0-flash";
         }
       }
       

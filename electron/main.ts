@@ -1,6 +1,7 @@
 import { app, BrowserWindow, screen, shell, ipcMain } from "electron"
 import path from "path"
 import fs from "fs"
+import log from "electron-log"
 import { initializeIpcHandlers } from "./ipcHandlers"
 import { ProcessingHelper } from "./ProcessingHelper"
 import { ScreenshotHelper } from "./ScreenshotHelper"
@@ -8,6 +9,11 @@ import { ShortcutsHelper } from "./shortcuts"
 import { initAutoUpdater } from "./autoUpdater"
 import { configHelper } from "./ConfigHelper"
 import * as dotenv from "dotenv"
+
+// Redirect console to electron-log to prevent EIO errors when stdout is unavailable (e.g. launched from Finder)
+Object.assign(console, log.functions)
+process.stdout.on("error", (err: NodeJS.ErrnoException) => { if (err.code === "EIO") process.exit(0) })
+process.stderr.on("error", (err: NodeJS.ErrnoException) => { if (err.code === "EIO") process.exit(0) })
 
 // Constants
 const isDev = process.env.NODE_ENV === "development"

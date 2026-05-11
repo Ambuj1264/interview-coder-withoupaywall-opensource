@@ -25,8 +25,8 @@ const MCQResults: React.FC<MCQResultsProps> = ({ setView, currentLanguage }) => 
   const contentRef = useRef<HTMLDivElement>(null)
   const { showToast } = useToast()
   const [mcqData, setMcqData] = useState<MCQResultData | null>(null)
-  const [showReasoning, setShowReasoning] = useState(false)
 
+  
   useEffect(() => {
     // Get MCQ data from cache
     const cached = queryClient.getQueryData(["mcq_result"]) as MCQResultData | null
@@ -55,7 +55,7 @@ const MCQResults: React.FC<MCQResultsProps> = ({ setView, currentLanguage }) => 
     observer.observe(contentRef.current)
     updateDimensions()
     return () => observer.disconnect()
-  }, [mcqData, showReasoning])
+  }, [mcqData])
 
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 0.9) return "from-emerald-400 to-green-500"
@@ -180,24 +180,6 @@ const MCQResults: React.FC<MCQResultsProps> = ({ setView, currentLanguage }) => 
                 <div className="text-[13px] leading-[1.5] text-gray-100 bg-white/5 rounded-md p-3">
                   {mcqData.explanation}
                 </div>
-              </div>
-
-              {/* Reasoning (collapsible) */}
-              <div className="space-y-2">
-                <button
-                  onClick={() => setShowReasoning(!showReasoning)}
-                  className="flex items-center gap-1.5 text-[13px] font-medium text-blue-400 hover:text-blue-300 transition"
-                >
-                  <span className={`transform transition-transform ${showReasoning ? "rotate-90" : ""}`}>
-                    ▶
-                  </span>
-                  Chain-of-Thought Reasoning
-                </button>
-                {showReasoning && (
-                  <div className="text-[12px] leading-[1.6] text-gray-300 bg-white/5 rounded-md p-3 border-l-2 border-blue-400/30">
-                    {mcqData.reasoning}
-                  </div>
-                )}
               </div>
 
               {/* Related concepts */}
