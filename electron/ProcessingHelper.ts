@@ -272,6 +272,11 @@ export class ProcessingHelper {
   // ─── Extra queue (debugging) ──────────────────────────────────────
 
   private async processExtraQueue(mainWindow: BrowserWindow): Promise<void> {
+    if (this.currentExtraProcessingAbortController) {
+      console.log("Extra processing already in progress, ignoring duplicate trigger")
+      return
+    }
+
     const extraScreenshotQueue = this.screenshotHelper.getExtraScreenshotQueue()
     console.log("Processing extra queue screenshots:", extraScreenshotQueue)
 
@@ -336,11 +341,13 @@ export class ProcessingHelper {
 
       if (agentResult.success) {
         this.deps.setHasDebugged(true)
+        this.screenshotHelper.clearExtraScreenshotQueue()
         mainWindow.webContents.send(
           this.deps.PROCESSING_EVENTS.DEBUG_SUCCESS,
           agentResult.data
         )
       } else {
+        this.screenshotHelper.clearExtraScreenshotQueue()
         mainWindow.webContents.send(
           this.deps.PROCESSING_EVENTS.DEBUG_ERROR,
           agentResult.error
