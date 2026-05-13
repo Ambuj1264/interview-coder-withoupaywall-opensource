@@ -37,7 +37,8 @@ const modelCategories: ModelCategory[] = [
     title: 'Problem Extraction',
     description: 'Model used to analyze screenshots and extract problem details',
     openaiModels: [
-      { id: "gpt-5.4-mini", name: "GPT-5.4 mini", description: "Fast, cost-efficient vision and multimodal extraction" }
+      { id: "gpt-4o", name: "GPT-4o", description: "Best vision accuracy for problem extraction" },
+      { id: "gpt-4o-mini", name: "GPT-4o mini", description: "Fast, cost-efficient vision and multimodal extraction" }
     ],
     geminiModels: [
       { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "Fastest response time" },
@@ -52,7 +53,8 @@ const modelCategories: ModelCategory[] = [
     title: 'Solution Generation',
     description: 'Model used to generate coding solutions',
     openaiModels: [
-      { id: "gpt-5.4-mini", name: "GPT-5.4 mini", description: "Fast, cost-efficient solution generation" }
+      { id: "gpt-4o", name: "GPT-4o", description: "Best reasoning for complex coding problems" },
+      { id: "gpt-4o-mini", name: "GPT-4o mini", description: "Fast, cost-efficient solution generation" }
     ],
     geminiModels: [
       { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "Fast and reliable" },
@@ -67,7 +69,8 @@ const modelCategories: ModelCategory[] = [
     title: 'Debugging',
     description: 'Model used to debug and improve solutions',
     openaiModels: [
-      { id: "gpt-5.4-mini", name: "GPT-5.4 mini", description: "Fast, cost-efficient debugging" }
+      { id: "gpt-4o", name: "GPT-4o", description: "Best for analyzing code and error messages" },
+      { id: "gpt-4o-mini", name: "GPT-4o mini", description: "Fast, cost-efficient debugging" }
     ],
     geminiModels: [
       { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "Quick fixes" },
@@ -82,7 +85,8 @@ const modelCategories: ModelCategory[] = [
     title: 'MCQ Solver',
     description: 'Model used to solve multiple-choice questions',
     openaiModels: [
-      { id: "gpt-5.4-mini", name: "GPT-5.4 mini", description: "Efficient reasoning for standard MCQs" }
+      { id: "gpt-4o", name: "GPT-4o", description: "Strong reasoning for complex MCQs" },
+      { id: "gpt-4o-mini", name: "GPT-4o mini", description: "Efficient reasoning for standard MCQs" }
     ],
     geminiModels: [
       { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "Fast and accurate" },
@@ -97,7 +101,8 @@ const modelCategories: ModelCategory[] = [
     title: 'Explanations',
     description: 'Model used to generate detailed concept explanations',
     openaiModels: [
-      { id: "gpt-5.4-mini", name: "GPT-5.4 mini", description: "Clear and concise conceptual insights" }
+      { id: "gpt-4o", name: "GPT-4o", description: "Expert-level explanations" },
+      { id: "gpt-4o-mini", name: "GPT-4o mini", description: "Clear and concise conceptual insights" }
     ],
     geminiModels: [
       { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "Concise and clear" },
@@ -183,11 +188,11 @@ export function SettingsDialog({ open: externalOpen, onOpenChange }: SettingsDia
     
     // Reset models to defaults when changing provider
     if (provider === "openai") {
-      setExtractionModel("gpt-5.4-mini");
-      setSolutionModel("gpt-5.4-mini");
-      setDebuggingModel("gpt-5.4-mini");
-      setMcqModel("gpt-5.4-mini");
-      setExplanationModel("gpt-5.4-mini");
+      setExtractionModel("gpt-4o-mini");
+      setSolutionModel("gpt-4o-mini");
+      setDebuggingModel("gpt-4o-mini");
+      setMcqModel("gpt-4o-mini");
+      setExplanationModel("gpt-4o-mini");
     } else if (provider === "gemini") {
       setExtractionModel("gemini-2.0-flash");
       setSolutionModel("gemini-2.0-flash");

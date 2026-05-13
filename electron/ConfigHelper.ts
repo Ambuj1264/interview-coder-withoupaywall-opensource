@@ -64,10 +64,10 @@ export class ConfigHelper extends EventEmitter {
    */
   private sanitizeModelSelection(model: string, provider: "openai" | "gemini" | "anthropic"): string {
     if (provider === "openai") {
-      const allowedModels = ['gpt-5.4-mini'];
+      const allowedModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4-turbo-preview', 'gpt-4'];
       if (!allowedModels.includes(model)) {
-        console.warn(`Invalid OpenAI model specified: ${model}. Using default model: gpt-5.4-mini`);
-        return 'gpt-5.4-mini';
+        console.warn(`Invalid OpenAI model specified: ${model}. Using default model: gpt-4o-mini`);
+        return 'gpt-4o-mini';
       }
       return model;
     } else if (provider === "gemini") {
@@ -102,7 +102,7 @@ export class ConfigHelper extends EventEmitter {
         
         // Set provider-specific defaults if models are missing
         const provider = config.apiProvider;
-        const defaultModel = provider === "openai" ? "gpt-5.4-mini" :
+        const defaultModel = provider === "openai" ? "gpt-4o-mini" :
                             provider === "anthropic" ? "claude-3-7-sonnet-20250219" :
                             "gemini-2.0-flash";
 
@@ -173,11 +173,11 @@ export class ConfigHelper extends EventEmitter {
       // If provider is changing, reset models to the default for that provider based on user ranking
       if (updates.apiProvider && updates.apiProvider !== currentConfig.apiProvider) {
         if (updates.apiProvider === "openai") {
-          updates.extractionModel = "gpt-5.4-mini";
-          updates.solutionModel = "gpt-5.4-mini";
-          updates.debuggingModel = "gpt-5.4-mini";
-          updates.mcqModel = "gpt-5.4-mini";
-          updates.explanationModel = "gpt-5.4-mini";
+          updates.extractionModel = "gpt-4o-mini";
+          updates.solutionModel = "gpt-4o-mini";
+          updates.debuggingModel = "gpt-4o-mini";
+          updates.mcqModel = "gpt-4o-mini";
+          updates.explanationModel = "gpt-4o-mini";
         } else if (updates.apiProvider === "anthropic") {
           updates.extractionModel = "claude-3-7-sonnet-20250219";
           updates.solutionModel = "claude-3-7-sonnet-20250219";
